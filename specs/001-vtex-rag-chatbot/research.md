@@ -54,13 +54,23 @@ open as `NEEDS CLARIFICATION`.
 
 - **Decision**: Single-pass top-k similarity search (k=5, tunable) directly against
   the `chunks` table for every query; no re-ranking model, no query rewriting/
-  expansion, no multi-hop retrieval in v1.
+  expansion, no multi-hop retrieval in v1. Of the top-k results, any chunk whose
+  cosine similarity score falls below a fixed threshold (configurable via
+  environment variable) is excluded before passages reach generation; if no chunk
+  meets the threshold, retrieval returns an empty passage set, which generation
+  treats as the no-context path (FR-004).
 - **Rationale**: Directly satisfies constitution Principle IV (start with the
   simplest retrieval approach that works); a single vector search is sufficient to
-  demonstrate and evaluate the full RAG loop end to end.
+  demonstrate and evaluate the full RAG loop end to end. A fixed similarity
+  threshold gives the "not enough information" decision (FR-004, clarified
+  2026-07-04) a deterministic, testable boundary instead of leaving it to
+  implicit model judgment, which Principle III's no-context test requires.
 - **Alternatives considered**: Hybrid keyword + vector search, cross-encoder
   re-ranking — deferred; explicitly the kind of complexity the constitution says to
   add only after an observed failure (e.g., eval results showing poor precision).
+  Dynamic/relative threshold (based on the score gap between top results) —
+  rejected as unnecessary complexity for a single-domain corpus; a fixed
+  threshold is simpler to reason about and to test.
 
 ## 5. Prompt construction & grounding enforcement
 
@@ -69,13 +79,22 @@ open as `NEEDS CLARIFICATION`.
   respond with an explicit "not found in the documentation" message when the supplied
   passages don't support an answer. The user-turn message contains the question
   followed by the retrieved passages (each labeled with its source reference). No
-  conversation history is included (stateless per FR-008).
+  conversation history is included (stateless per FR-008). When the retrieved
+  passages span multiple distinct, unrelated sections (an ambiguous question, FR-006a),
+  the same prompt instructs the model to address each interpretation it found as a
+  separate labeled part of the answer, each citing its own source, rather than
+  picking one interpretation silently.
 - **Rationale**: Directly implements Principles I and II; keeping grounding
   instructions in one static template (rather than dynamically generated per-domain
-  prompts) is the simplest approach that satisfies the requirements.
+  prompts) is the simplest approach that satisfies the requirements. Handling
+  ambiguity by labeling multiple interpretations (clarified 2026-07-04) fits this
+  same single-prompt, single-pass design with no extra retrieval step or follow-up
+  turn, consistent with the system being stateless (FR-008).
 - **Alternatives considered**: Few-shot examples embedded in the prompt — deferred
   as unnecessary complexity unless evaluation shows the zero-shot instruction is
-  insufficient.
+  insufficient. Asking the user a clarifying question before answering — rejected
+  because the system has no conversation history (FR-008), so a follow-up request
+  would arrive with no memory of the original ambiguous question.
 
 ## 6. LLM selection
 
@@ -135,3 +154,20 @@ open as `NEEDS CLARIFICATION`.
 - **Alternatives considered**: Prisma/TypeORM — rejected for v1 since an ORM would
   abstract away the pgvector query mechanics that are core to what this project is
   meant to teach.
+
+## 10. External API failure handling (FR-012)
+
+- **Decision**: If the OpenAI embedding or generation call fails or times out, the
+  API returns an explicit `500` error response (`ErrorResponse` schema, per
+  `contracts/openapi.yaml`) rather than a fabricated, partial, or non-grounded
+  answer, and logs the failure to the `interactions` table (`error` field) and
+  stdout per §8. No automatic retries are performed.
+- **Rationale**: Keeps failure handling simple for a single-user learning project
+  (Principle IV/Simplicity — no retry/backoff logic to build or test) and upholds
+  Principle I: falling back to the model's un-grounded knowledge on failure would
+  silently violate grounding, which is worse than a visible error (clarified
+  2026-07-04).
+- **Alternatives considered**: Automatic retries with backoff — deferred as
+  complexity not justified until an observed transient-failure rate warrants it;
+  falling back to a non-grounded, "unverified" answer — rejected outright as a
+  direct violation of Retrieval Grounding (Principle I).

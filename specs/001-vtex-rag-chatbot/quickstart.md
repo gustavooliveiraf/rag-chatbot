@@ -65,6 +65,28 @@ Using the User Story 1 response above: open the `url` from the first entry in
 `sources` and confirm the page actually discusses the `headingPath` section named
 in the response, and that it supports the claims in `answer`.
 
+## Validate ambiguous-question handling (FR-006a)
+
+```
+curl -s -X POST http://localhost:3000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"question":"What is a SKU?"}'
+```
+
+Expected: HTTP 200, `grounded: true`, `sources` contains entries from more than one
+distinct `headingPath`/module if the term is documented differently in multiple
+sections, and `answer` clearly labels each interpretation with the section it came
+from rather than blending them into one claim.
+
+## Validate external API failure handling (FR-012)
+
+With `OPENAI_API_KEY` temporarily set to an invalid value, restart the API and repeat
+the User Story 1 request.
+
+Expected: HTTP 500, `ErrorResponse` body (`{"error": "..."}`), no fabricated or
+partial `answer`, and a corresponding row in `interactions` with `error` populated
+and `answer` null.
+
 ## Validate observability (FR-010)
 
 ```

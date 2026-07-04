@@ -12,7 +12,10 @@ A single-user, no-auth HTTP API that answers natural-language questions about th
 platform strictly from ingested official VTEX documentation. The system embeds a
 question, retrieves the closest documentation passages from a Postgres/pgvector store,
 and asks OpenAI's `gpt-5-mini` to answer using only those passages, always attaching source references
-and explicitly declining when retrieval finds nothing relevant. Every architectural
+and explicitly declining when no passage clears a fixed similarity threshold. Questions that match
+multiple unrelated documentation sections are answered as separately labeled interpretations rather
+than silently picking one; external API failures surface as an explicit error rather than a
+non-grounded fallback. Every architectural
 component (ingestion, chunking, embedding calls, vector search, prompt construction,
 answer assembly, logging, evaluation) is hand-written rather than delegated to an AI
 orchestration framework, per the project's educational goal, and is organized so a later
@@ -56,7 +59,7 @@ limiting or multi-tenant concerns
 
 | Principle | Check | Result |
 |---|---|---|
-| I. Retrieval Grounding (NON-NEGOTIABLE) | Pipeline is strictly retrieve-then-generate; the `gpt-5-mini` prompt (Phase 1) instructs the model to answer only from supplied passages and to say so explicitly when passages are insufficient (FR-003, FR-004) | PASS |
+| I. Retrieval Grounding (NON-NEGOTIABLE) | Pipeline is strictly retrieve-then-generate; the `gpt-5-mini` prompt (Phase 1) instructs the model to answer only from supplied passages and to say so explicitly when no passage clears the fixed similarity threshold (FR-003, FR-004); on external API failure the system returns an explicit error rather than a non-grounded fallback (FR-012) | PASS |
 | II. Source Attribution | Every chunk carries its source document/section reference through retrieval into the API response (FR-005); contract in Phase 1 makes `sources` a required response field whenever an answer is grounded | PASS |
 | III. Test-First for Retrieval & Generation | Vitest suite will cover the golden-path (relevant chunks retrieved and used) and no-context path (no relevant chunks → explicit decline) before those code paths are marked done, per Development Workflow | PASS (planned; enforced at task/implementation time) |
 | IV. Simplicity (YAGNI) | Single vector store (pgvector in the same Postgres instance), single-pass retrieval, no re-ranking/multi-hop/agentic loop for v1; hand-written code instead of a framework is a deliberate educational trade-off, not added incidental complexity — see note below | PASS |
@@ -131,3 +134,12 @@ honest-decline path a first-class, always-present field (not an afterthought), a
 entities, endpoints, or dependencies were introduced during Phase 1 that weren't
 already covered by the pre-design check. All five principles remain PASS; no
 Complexity Tracking entries are required.
+
+**Re-check after 2026-07-04 clarifications**: `/speckit-clarify` added FR-006a
+(ambiguous questions), the similarity-threshold rule in FR-004, and FR-012
+(external API failure → explicit error). None require new entities or endpoints:
+`sources` (already an array in `ChatResponse`) accommodates multiple labeled
+interpretations, and the `500`/`ErrorResponse` path already in
+`contracts/openapi.yaml` and the `error` column already in `interactions`
+(data-model.md) already cover FR-012. research.md §4, §5, and the new §10 record
+the corresponding decisions. All five principles remain PASS.

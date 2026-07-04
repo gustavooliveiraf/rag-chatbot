@@ -8,6 +8,14 @@
 
 **Input**: User description: "Build an AI chatbot capable of answering questions about the VTEX platform using Retrieval-Augmented Generation (RAG). The chatbot should answer exclusively based on the official VTEX documentation and clearly indicate when the documentation does not contain the requested information. This project is intended as a learning exercise to understand the architecture of modern AI applications, including RAG, embeddings, retrieval, prompt construction, evaluation, observability, and, in future iterations, MCP and tool calling. Goals: learn how a production-grade RAG application works; understand the responsibilities of a harness; implement retrieval without relying on AI frameworks; learn how prompts are constructed; learn how evaluation and observability fit into an AI system; build a clean architecture that can later evolve into an AI agent. Non-Goals for the initial version: user authentication, user accounts, persistent conversation history, streaming responses, tool calling, MCP integration, multi-agent workflows, voice interface, fine-tuning models."
 
+## Clarifications
+
+### Session 2026-07-04
+
+- Q: When a question is ambiguous or matches documentation from multiple unrelated VTEX modules (e.g., a term with different meanings in different areas), what should the system do? → A: Answer covering the top distinct interpretations found, each explicitly labeled with its own source section.
+- Q: FR-004 says the system declines when documentation "does not contain enough information" — how is that boundary judged for a weak/borderline retrieval match? → A: A fixed similarity-score threshold: retrieved chunks below it are excluded from context, and if none remain, the system declines.
+- Q: What should the user-facing behavior be if an external API call (embedding or generation) fails or times out mid-request? → A: Return an explicit error response (e.g., "temporarily unavailable, try again") rather than a fabricated or partial answer; log it per FR-010. No automatic retries.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Get a grounded answer to a documented question (Priority: P1)
@@ -57,12 +65,12 @@ A person receives an answer and wants to know which part of the VTEX documentati
 
 ### Edge Cases
 
-- What happens when a question is ambiguous or could match multiple unrelated documentation sections (e.g., a term that means different things in different VTEX modules)?
+- When a question is ambiguous or could match multiple unrelated documentation sections (e.g., a term that means different things in different VTEX modules), the system answers by covering each distinct interpretation it finds, with each part explicitly labeled by the source section it came from (see Clarifications).
 - How does the system handle a question that is entirely unrelated to VTEX or e-commerce (e.g., general trivia)?
 - How does the system handle a question phrased in a language other than the documentation's language?
 - How does the system handle an extremely short, vague question (e.g., "how do I do it?") with no retrievable context?
 - How does the system handle documentation that is outdated or has since changed on the official VTEX site?
-- How does the system handle a retrieval result that is only weakly related to the question (low-confidence match)?
+- A retrieval result that is only weakly related to the question (below the similarity threshold) is excluded from context; if nothing meets the threshold, the system declines rather than answering from a weak match (see Clarifications, FR-004).
 
 ## Requirements *(mandatory)*
 
@@ -71,14 +79,16 @@ A person receives an answer and wants to know which part of the VTEX documentati
 - **FR-001**: System MUST allow a user to submit a natural-language question about the VTEX platform and receive a response.
 - **FR-002**: System MUST retrieve relevant passages from the ingested official VTEX documentation before producing an answer to a question.
 - **FR-003**: System MUST restrict the factual content of its answers to what is supported by the retrieved documentation passages; it MUST NOT present unsupported claims or general/open-domain knowledge as if they were documentation-backed facts.
-- **FR-004**: System MUST explicitly tell the user when the documentation does not contain enough information to answer their question, instead of guessing.
+- **FR-004**: System MUST explicitly tell the user when the documentation does not contain enough information to answer their question, instead of guessing. "Not enough information" MUST be determined by a fixed retrieval similarity-score threshold: passages scoring below the threshold are excluded from consideration, and if no passage meets the threshold, the system declines rather than answering from a weak match.
 - **FR-005**: System MUST include, with every answer that uses documentation content, a reference to the specific source(s) (e.g., page or section title) it drew from.
 - **FR-006**: System MUST treat the ingested VTEX documentation as the sole source of truth for answers; content not present in the ingested corpus is out of scope for answering, even if broadly known.
+- **FR-006a**: When a question matches documentation from multiple distinct, unrelated sections (an ambiguous term or topic), System MUST answer by addressing each distinct interpretation it found, labeling each part with the specific source section it came from, rather than silently picking one interpretation or refusing to answer.
 - **FR-007**: System MUST NOT require the user to log in, register, or maintain an account to ask questions.
 - **FR-008**: System MUST NOT retain a user's questions or answers beyond the current session; no persistent conversation history is stored.
 - **FR-009**: System MUST return each answer as a single complete response rather than incrementally streaming partial output.
 - **FR-010**: System MUST record each interaction (the question, the retrieved sources, the final answer, and any errors) in a form that can be inspected later for debugging and quality review.
 - **FR-011**: System MUST support running a repeatable set of reference questions (with known expected answers/sources) against the chatbot to measure whether its answers stay grounded and correctly cite sources over time.
+- **FR-012**: If an external API call (embedding or answer generation) fails or times out, System MUST return an explicit error response to the user (rather than a fabricated, partial, or non-grounded answer) and MUST log the failure per FR-010. No automatic retries are required.
 
 ### Key Entities
 
