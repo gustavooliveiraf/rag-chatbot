@@ -38,7 +38,7 @@ Single backend project (no frontend) per plan.md: `src/`, `tests/`, `evaluation/
 - [ ] T002 Initialize Node.js + TypeScript project in repository root: `package.json`, `tsconfig.json`, and dependencies (`express`, `pg`, `openai`, `dotenv`, dev deps `typescript`, `vitest`, `tsx`, `@types/express`, `@types/pg`) (depends on T001)
 - [ ] T003 [P] Configure ESLint + Prettier in `.eslintrc.cjs` and `.prettierrc` (depends on T002)
 - [ ] T004 [P] Create `docker-compose.yml` providing a local PostgreSQL instance with the `pgvector` extension enabled (depends on T001)
-- [ ] T005 [P] Create `.env.example` with `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `DATABASE_URL`, `PORT` (depends on T001)
+- [ ] T005 [P] Create `.env.example` with `OPENAI_API_KEY`, `DATABASE_URL`, `PORT` (depends on T001)
 
 ---
 

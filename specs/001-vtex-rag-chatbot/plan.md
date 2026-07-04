@@ -86,7 +86,7 @@ specs/001-vtex-rag-chatbot/
 
 ```text
 src/
-├── config/            # env loading (DB url, ANTHROPIC_API_KEY, OPENAI_API_KEY, etc.)
+├── config/            # env loading (DB url, OPENAI_API_KEY, etc.)
 ├── db/                # pg pool, schema migrations, pgvector setup
 ├── ingestion/         # VTEX docs fetch/parse, chunking, embedding + upsert pipeline
 ├── retrieval/         # query embedding, pgvector similarity search, passage selection
