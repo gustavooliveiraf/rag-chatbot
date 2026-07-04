@@ -1,0 +1,26 @@
+[
+  {
+    "id": "shipping-policy-basic",
+    "question": "How do I configure a shipping policy?",
+    "expect_answered": true,
+    "expected_source_titles": ["Checkout"]
+  },
+  {
+    "id": "sku-ambiguous",
+    "question": "What is a SKU?",
+    "expect_answered": true,
+    "expected_source_titles": ["Catalog"]
+  },
+  {
+    "id": "unrelated-general-trivia",
+    "question": "What is the capital of France?",
+    "expect_answered": false,
+    "expected_source_titles": []
+  },
+  {
+    "id": "unrelated-other-platform",
+    "question": "How do I configure Shopify's checkout flow?",
+    "expect_answered": false,
+    "expected_source_titles": []
+  }
+]
