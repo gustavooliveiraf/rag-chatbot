@@ -70,13 +70,17 @@ in the response, and that it supports the claims in `answer`.
 ```
 curl -s -X POST http://localhost:3000/chat \
   -H "Content-Type: application/json" \
-  -d '{"question":"What is a SKU?"}'
+  -d '{"question":"<a term documented in 2+ distinct sections of your ingested seed set>"}'
 ```
 
+Pick a term from your actual seed list (research.md §1) known to appear in more than
+one module; `What is a SKU?` is illustrative, not guaranteed to be ambiguous in
+whatever subset you ingested.
+
 Expected: HTTP 200, `grounded: true`, `sources` contains entries from more than one
-distinct `headingPath`/module if the term is documented differently in multiple
-sections, and `answer` clearly labels each interpretation with the section it came
-from rather than blending them into one claim.
+distinct `headingPath`/module (up to 3 interpretations per FR-006a) if the term is
+documented differently in multiple sections, and `answer` clearly labels each
+interpretation with the section it came from rather than blending them into one claim.
 
 ## Validate external API failure handling (FR-012)
 

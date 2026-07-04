@@ -65,7 +65,7 @@ A person receives an answer and wants to know which part of the VTEX documentati
 
 ### Edge Cases
 
-- When a question is ambiguous or could match multiple unrelated documentation sections (e.g., a term that means different things in different VTEX modules), the system answers by covering each distinct interpretation it finds, with each part explicitly labeled by the source section it came from (see Clarifications).
+- When a question is ambiguous or could match multiple unrelated documentation sections (e.g., a term that means different things in different VTEX modules), the system answers by covering up to the top 3 distinct interpretations it finds, with each part explicitly labeled by the source section it came from (see Clarifications, FR-006a).
 - How does the system handle a question that is entirely unrelated to VTEX or e-commerce (e.g., general trivia)?
 - How does the system handle a question phrased in a language other than the documentation's language?
 - How does the system handle an extremely short, vague question (e.g., "how do I do it?") with no retrievable context?
@@ -82,7 +82,7 @@ A person receives an answer and wants to know which part of the VTEX documentati
 - **FR-004**: System MUST explicitly tell the user when the documentation does not contain enough information to answer their question, instead of guessing. "Not enough information" MUST be determined by a fixed retrieval similarity-score threshold: passages scoring below the threshold are excluded from consideration, and if no passage meets the threshold, the system declines rather than answering from a weak match.
 - **FR-005**: System MUST include, with every answer that uses documentation content, a reference to the specific source(s) (e.g., page or section title) it drew from.
 - **FR-006**: System MUST treat the ingested VTEX documentation as the sole source of truth for answers; content not present in the ingested corpus is out of scope for answering, even if broadly known.
-- **FR-006a**: When a question matches documentation from multiple distinct, unrelated sections (an ambiguous term or topic), System MUST answer by addressing each distinct interpretation it found, labeling each part with the specific source section it came from, rather than silently picking one interpretation or refusing to answer.
+- **FR-006a**: When a question matches documentation from multiple distinct, unrelated sections (an ambiguous term or topic), System MUST answer by addressing up to the top 3 distinct interpretations it found, labeling each part with the specific source section it came from, rather than silently picking one interpretation or refusing to answer.
 - **FR-007**: System MUST NOT require the user to log in, register, or maintain an account to ask questions.
 - **FR-008**: System MUST NOT retain a user's questions or answers beyond the current session; no persistent conversation history is stored.
 - **FR-009**: System MUST return each answer as a single complete response rather than incrementally streaming partial output.

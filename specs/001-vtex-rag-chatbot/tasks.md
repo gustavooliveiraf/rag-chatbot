@@ -87,7 +87,7 @@ ambiguous-question handling").
 
 - [ ] T018 [P] [US1] Unit test for pgvector top-k similarity search / passage selection in `tests/unit/retrieval.test.ts`
 - [ ] T019 [P] [US1] Unit test for grounding prompt construction (system + passage-labeled user turn) in `tests/unit/promptBuilder.test.ts`
-- [ ] T020 [P] [US1] Integration test for `POST /chat` golden-path (grounded answer, non-empty sources) against the `ChatResponse` contract in `tests/integration/chat.grounded.test.ts`
+- [ ] T020 [P] [US1] Integration test for `POST /chat` golden-path (grounded answer, non-empty sources, response received in under 10s per SC-001, no `Set-Cookie` header and delivered as a single non-chunked JSON body per FR-007/FR-008/FR-009) against the `ChatResponse` contract in `tests/integration/chat.grounded.test.ts`
 - [ ] T021 [P] [US1] Unit test for multi-interpretation answer assembly: passages from distinct, unrelated `heading_path`s produce separately labeled answer parts, each citing its own source (FR-006a) in `tests/unit/generateAnswer.ambiguous.test.ts`
 
 ### Implementation for User Story 1

@@ -55,10 +55,10 @@ open as `NEEDS CLARIFICATION`.
 - **Decision**: Single-pass top-k similarity search (k=5, tunable) directly against
   the `chunks` table for every query; no re-ranking model, no query rewriting/
   expansion, no multi-hop retrieval in v1. Of the top-k results, any chunk whose
-  cosine similarity score falls below a fixed threshold (configurable via
-  environment variable) is excluded before passages reach generation; if no chunk
-  meets the threshold, retrieval returns an empty passage set, which generation
-  treats as the no-context path (FR-004).
+  cosine similarity score falls below a fixed threshold (configurable via the
+  `RETRIEVAL_SIMILARITY_THRESHOLD` environment variable) is excluded before passages
+  reach generation; if no chunk meets the threshold, retrieval returns an empty
+  passage set, which generation treats as the no-context path (FR-004).
 - **Rationale**: Directly satisfies constitution Principle IV (start with the
   simplest retrieval approach that works); a single vector search is sufficient to
   demonstrate and evaluate the full RAG loop end to end. A fixed similarity
