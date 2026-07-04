@@ -1,26 +1,3 @@
-<!--
-Sync Impact Report
-==================
-Version change: [TEMPLATE] → 1.0.0 (initial ratification)
-Modified principles: N/A (first fill of template placeholders)
-Added sections:
-  - I. Retrieval Grounding (NON-NEGOTIABLE)
-  - II. Source Attribution
-  - III. Test-First for Retrieval & Generation
-  - IV. Simplicity (YAGNI)
-  - V. Basic Observability
-  - Response Quality Standards (Section 2)
-  - Development Workflow (Section 3)
-  - Governance
-Removed sections: none
-Templates requiring updates:
-  - .specify/templates/plan-template.md ✅ (generic "Gates determined based on constitution file" — no change needed)
-  - .specify/templates/spec-template.md ✅ (no constitution-specific references found — no change needed)
-  - .specify/templates/tasks-template.md ✅ (no constitution-specific references found — no change needed)
-  - .specify/templates/commands/*.md ⚠ pending (directory not present at ratification time; re-check if commands are added later)
-Follow-up TODOs: none
--->
-
 # RAG Chatbot Constitution
 
 ## Core Principles
