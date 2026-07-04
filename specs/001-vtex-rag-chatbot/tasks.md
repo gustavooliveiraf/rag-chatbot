@@ -35,7 +35,7 @@ Single backend project (no frontend) per plan.md: `src/`, `tests/`, `evaluation/
 **Purpose**: Project initialization and basic structure
 
 - [ ] T001 Create project directory structure per plan.md: `src/{config,db,ingestion,retrieval,generation,observability,evaluation,types}`, `src/api/{routes,controllers}`, `tests/{unit,integration,evaluation}`, `evaluation/fixtures`
-- [ ] T002 Initialize Node.js + TypeScript project in repository root: `package.json`, `tsconfig.json`, and dependencies (`express`, `pg`, `@anthropic-ai/sdk`, `openai`, `dotenv`, dev deps `typescript`, `vitest`, `tsx`, `@types/express`, `@types/pg`) (depends on T001)
+- [ ] T002 Initialize Node.js + TypeScript project in repository root: `package.json`, `tsconfig.json`, and dependencies (`express`, `pg`, `openai`, `dotenv`, dev deps `typescript`, `vitest`, `tsx`, `@types/express`, `@types/pg`) (depends on T001)
 - [ ] T003 [P] Configure ESLint + Prettier in `.eslintrc.cjs` and `.prettierrc` (depends on T002)
 - [ ] T004 [P] Create `docker-compose.yml` providing a local PostgreSQL instance with the `pgvector` extension enabled (depends on T001)
 - [ ] T005 [P] Create `.env.example` with `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `DATABASE_URL`, `PORT` (depends on T001)
@@ -51,7 +51,7 @@ Single backend project (no frontend) per plan.md: `src/`, `tests/`, `evaluation/
 - [ ] T006 [P] Create DB schema migration for `documents`, `chunks` (`vector(1536)` column + HNSW cosine index), and `interactions` tables per data-model.md in `src/db/migrations/001_init.sql` (depends on T002, T004)
 - [ ] T007 [P] Implement PostgreSQL connection pool in `src/db/pool.ts` (depends on T002)
 - [ ] T008 [P] Implement environment config loader in `src/config/index.ts` (depends on T002, T005)
-- [ ] T009 Implement Anthropic + OpenAI SDK client setup in `src/config/clients.ts` (depends on T008)
+- [ ] T009 Implement OpenAI SDK client setup (shared by generation and embeddings) in `src/config/clients.ts` (depends on T008)
 - [ ] T010 [P] Define shared TypeScript types (`Chunk`, `SourceRef`, `Answer`, `ChatRequest`, `ChatResponse`, `EvaluationCase`) in `src/types/index.ts` per data-model.md and contracts/openapi.yaml (depends on T002)
 - [ ] T011 [P] Implement structured JSON logger in `src/observability/logger.ts` (depends on T002)
 - [ ] T012 Implement interaction record persistence (insert into `interactions`) in `src/observability/interactions.ts` (depends on T006, T007, T010)
@@ -88,7 +88,7 @@ claims are all supported by retrieved documentation content (FR-001, FR-002, FR-
 - [ ] T021 [P] [US1] Implement query embedding + pgvector top-k similarity search in `src/retrieval/search.ts` (depends on T009, T010, T007; must pass T018)
 - [ ] T022 [US1] Implement passage selection/formatting for the prompt in `src/retrieval/selectPassages.ts` (depends on T021)
 - [ ] T023 [P] [US1] Implement grounding system/user prompt builder in `src/generation/promptBuilder.ts` (depends on T010; must pass T019)
-- [ ] T024 [US1] Implement Claude call + grounded answer assembly in `src/generation/generateAnswer.ts` (depends on T009, T022, T023)
+- [ ] T024 [US1] Implement `gpt-5-mini` call + grounded answer assembly in `src/generation/generateAnswer.ts` (depends on T009, T022, T023)
 - [ ] T025 [US1] Implement `POST /chat` controller wiring retrieval → generation → interaction logging in `src/api/controllers/chatController.ts` (depends on T022, T024, T012)
 - [ ] T026 [US1] Register `POST /chat` route and wire into the app in `src/api/routes/chat.ts` / `src/api/server.ts` (depends on T025, T013; must pass T020)
 

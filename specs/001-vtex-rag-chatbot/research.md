@@ -64,7 +64,7 @@ open as `NEEDS CLARIFICATION`.
 
 ## 5. Prompt construction & grounding enforcement
 
-- **Decision**: A single system prompt instructs Claude to answer only using the
+- **Decision**: A single system prompt instructs the model to answer only using the
   provided passages, to cite which passage(s) support each part of the answer, and to
   respond with an explicit "not found in the documentation" message when the supplied
   passages don't support an answer. The user-turn message contains the question
@@ -79,15 +79,19 @@ open as `NEEDS CLARIFICATION`.
 
 ## 6. LLM selection
 
-- **Decision**: Use Claude Sonnet 5 (`claude-sonnet-5`) as the generation model,
-  configurable via an environment variable so it can be swapped without a code change.
+- **Decision**: Use OpenAI `gpt-5-mini` as the generation model, configurable via an
+  environment variable so it can be swapped without a code change. Generation now
+  shares the same `openai` SDK client already used for embeddings (see §3), so no
+  separate LLM provider SDK is needed.
 - **Rationale**: Balances answer quality and cost/latency for a single-user learning
-  project; matches the user's "Anthropic Claude" stack choice while keeping the model
-  id centralized and swappable, consistent with Simplicity (no premature multi-model
-  routing).
-- **Alternatives considered**: Claude Opus 4.8 — noted as a drop-in upgrade path if
+  project; keeping the model id centralized and swappable is consistent with
+  Simplicity (no premature multi-model routing). Using one provider for both
+  embeddings and generation also removes a dependency (no `@anthropic-ai/sdk`) with
+  no loss of capability for this use case.
+- **Alternatives considered**: `gpt-5` (full) — noted as a drop-in upgrade path if
   answer quality on the evaluation set proves insufficient; not chosen by default to
-  keep latency low relative to SC-001.
+  keep latency low relative to SC-001. Anthropic Claude — the project's original
+  stack choice; superseded by this decision in favor of a single-provider setup.
 
 ## 7. Evaluation approach (FR-011)
 

@@ -8,12 +8,12 @@ Validates the feature end-to-end per the acceptance scenarios in
 
 - Node.js 20 LTS, npm
 - Docker (for local Postgres + pgvector)
-- An `ANTHROPIC_API_KEY` (Claude) and an `OPENAI_API_KEY` (embeddings)
+- An `OPENAI_API_KEY` (used for both `gpt-5-mini` generation and `text-embedding-3-small` embeddings)
 
 ## Setup
 
-1. Copy `.env.example` to `.env` and fill in `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`,
-   and `DATABASE_URL` (defaults point at the Docker Compose Postgres instance).
+1. Copy `.env.example` to `.env` and fill in `OPENAI_API_KEY` and `DATABASE_URL`
+   (defaults point at the Docker Compose Postgres instance).
 2. Start Postgres with pgvector enabled:
    ```
    docker compose up -d

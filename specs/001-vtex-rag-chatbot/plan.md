@@ -11,7 +11,7 @@
 A single-user, no-auth HTTP API that answers natural-language questions about the VTEX
 platform strictly from ingested official VTEX documentation. The system embeds a
 question, retrieves the closest documentation passages from a Postgres/pgvector store,
-and asks Claude to answer using only those passages, always attaching source references
+and asks OpenAI's `gpt-5-mini` to answer using only those passages, always attaching source references
 and explicitly declining when retrieval finds nothing relevant. Every architectural
 component (ingestion, chunking, embedding calls, vector search, prompt construction,
 answer assembly, logging, evaluation) is hand-written rather than delegated to an AI
@@ -22,8 +22,8 @@ iteration can add memory, tool calling, and MCP without a rewrite.
 
 **Language/Version**: TypeScript 5.x on Node.js 20 LTS
 
-**Primary Dependencies**: Express (HTTP layer), `pg` (PostgreSQL client), `@anthropic-ai/sdk`
-(Claude calls), `openai` (embeddings only, via `text-embedding-3-small`), `dotenv` (config)
+**Primary Dependencies**: Express (HTTP layer), `pg` (PostgreSQL client), `openai` (both
+generation, via `gpt-5-mini`, and embeddings, via `text-embedding-3-small`), `dotenv` (config)
 
 **Storage**: PostgreSQL with the `pgvector` extension (documents, chunks + embeddings,
 interaction logs all live here; no separate document store or cache layer for v1)
@@ -42,9 +42,9 @@ single-user, sequential-request load; no concurrency target for v1
 
 **Constraints**: No AI orchestration framework (e.g., LangChain, LlamaIndex) may be used
 for retrieval, prompt construction, or orchestration — every step is implemented directly
-against the Anthropic SDK, OpenAI SDK, and `pg`, per the project's educational goal and
-constitution Principle IV (Simplicity/YAGNI: no extra abstraction layers beyond what a
-single-pass retrieve-then-generate pipeline needs)
+against the OpenAI SDK and `pg`, per the project's educational goal and constitution
+Principle IV (Simplicity/YAGNI: no extra abstraction layers beyond what a single-pass
+retrieve-then-generate pipeline needs)
 
 **Scale/Scope**: A curated subset of official VTEX documentation (on the order of
 hundreds to low thousands of chunks) ingested for v1; single concurrent user; no rate
@@ -56,7 +56,7 @@ limiting or multi-tenant concerns
 
 | Principle | Check | Result |
 |---|---|---|
-| I. Retrieval Grounding (NON-NEGOTIABLE) | Pipeline is strictly retrieve-then-generate; the Claude prompt (Phase 1) instructs the model to answer only from supplied passages and to say so explicitly when passages are insufficient (FR-003, FR-004) | PASS |
+| I. Retrieval Grounding (NON-NEGOTIABLE) | Pipeline is strictly retrieve-then-generate; the `gpt-5-mini` prompt (Phase 1) instructs the model to answer only from supplied passages and to say so explicitly when passages are insufficient (FR-003, FR-004) | PASS |
 | II. Source Attribution | Every chunk carries its source document/section reference through retrieval into the API response (FR-005); contract in Phase 1 makes `sources` a required response field whenever an answer is grounded | PASS |
 | III. Test-First for Retrieval & Generation | Vitest suite will cover the golden-path (relevant chunks retrieved and used) and no-context path (no relevant chunks → explicit decline) before those code paths are marked done, per Development Workflow | PASS (planned; enforced at task/implementation time) |
 | IV. Simplicity (YAGNI) | Single vector store (pgvector in the same Postgres instance), single-pass retrieval, no re-ranking/multi-hop/agentic loop for v1; hand-written code instead of a framework is a deliberate educational trade-off, not added incidental complexity — see note below | PASS |
@@ -90,7 +90,7 @@ src/
 ├── db/                # pg pool, schema migrations, pgvector setup
 ├── ingestion/         # VTEX docs fetch/parse, chunking, embedding + upsert pipeline
 ├── retrieval/         # query embedding, pgvector similarity search, passage selection
-├── generation/        # prompt construction, Claude client call, answer assembly
+├── generation/        # prompt construction, gpt-5-mini call, answer assembly
 ├── observability/     # structured logging, interaction record persistence
 ├── evaluation/         # eval-case runner (FR-011), fixtures loader
 ├── api/
