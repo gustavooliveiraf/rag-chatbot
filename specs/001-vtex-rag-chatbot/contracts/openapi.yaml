@@ -1,0 +1,105 @@
+openapi: 3.0.3
+info:
+  title: VTEX Documentation RAG Chatbot API
+  version: "0.1.0"
+  description: >
+    HTTP API for asking natural-language questions about the VTEX platform,
+    answered strictly from ingested official VTEX documentation. No
+    authentication, no persistent conversation history (see spec.md).
+paths:
+  /health:
+    get:
+      summary: Liveness check
+      responses:
+        "200":
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
+  /chat:
+    post:
+      summary: Ask a question about the VTEX platform
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRequest"
+      responses:
+        "200":
+          description: >
+            An answer was produced. `grounded: false` means the documentation
+            did not contain enough information (FR-004) — this is a normal,
+            successful response, not an error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatResponse"
+        "400":
+          description: Malformed request (e.g., missing or empty `question`)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Unexpected server error (retrieval, embedding, or LLM call failed)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required: [question]
+      properties:
+        question:
+          type: string
+          minLength: 1
+          description: Natural-language question about the VTEX platform
+          example: "How do I configure a shipping policy?"
+    ChatResponse:
+      type: object
+      required: [answer, grounded, sources]
+      properties:
+        answer:
+          type: string
+          description: >
+            The generated answer text, or an explicit "not found in the
+            documentation" message when grounded is false.
+        grounded:
+          type: boolean
+          description: True if the answer is backed by retrieved documentation content.
+        sources:
+          type: array
+          description: >
+            Documentation sources used to produce the answer. Empty when
+            grounded is false.
+          items:
+            $ref: "#/components/schemas/SourceRef"
+    SourceRef:
+      type: object
+      required: [title, headingPath, url]
+      properties:
+        title:
+          type: string
+          description: Title of the source documentation page
+        headingPath:
+          type: string
+          description: Section path within the page, e.g. "Checkout > Shipping Policies"
+        url:
+          type: string
+          format: uri
+          description: Canonical URL of the source page
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
