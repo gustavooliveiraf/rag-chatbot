@@ -1,0 +1,23 @@
+{
+  "repository": "vtexdocs/dev-portal-content/refs/heads",
+  "branch": "main",
+  "documents": [
+    "docs/en/tutorials/catalog/catalog-overview/catalog-overview.md",
+    "docs/en/tutorials/catalog/catalog-overview/understanding-how-indexation-works.md",
+    "docs/en/tutorials/catalog/catalog-reports/how-to-use-the-index-report.md",
+    "docs/en/tutorials/catalog/catalog-reports/understanding-the-security-report.md",
+    "docs/en/tutorials/catalog/categories/creating-a-specification-group-in-a-category.md",
+    "docs/en/tutorials/catalog/categories/what-is-a-category.md",
+    "docs/en/tutorials/catalog/categories/what-is-a-department.md",
+    "docs/en/tutorials/catalog/categories/what-is-a-subcategory.md",
+    "docs/en/tutorials/trade-policies/trade-policies'-overview/how-trade-policies-work.md",
+    "docs/en/tutorials/orders/orders-overview/all-orders.md",
+    "docs/en/tutorials/orders/orders-overview/order-details-page.md",
+    "docs/en/tutorials/orders/orders-overview/orders-overview.md",
+    "docs/en/tutorials/orders/orders-overview/vtex-do-interface.md",
+    "docs/en/tutorials/orders/understanding-b2b-orders.md",
+    "docs/en/tutorials/prices/price-list/sku-price-change.md",
+    "docs/en/tutorials/prices/rounding-rules.md",
+    "docs/en/tutorials/payments/payments-overview/what-is-a-credit-card-brand.md"
+  ]
+}

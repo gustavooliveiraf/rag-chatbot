@@ -3,9 +3,7 @@
 An educational Retrieval-Augmented Generation (RAG) chatbot that answers questions
 about the VTEX platform strictly from ingested official VTEX documentation, with
 every pipeline stage (retrieval, prompt construction, generation, evaluation,
-observability) hand-written instead of delegated to an AI framework. See
-[`specs/001-vtex-rag-chatbot/`](./specs/001-vtex-rag-chatbot/) for the full spec,
-plan, and task breakdown.
+observability) hand-written instead of delegated to an AI framework.
 
 ## Prerequisites
 
@@ -23,11 +21,13 @@ npm install
 npm run db:migrate
 ```
 
-> **Ingestion**: `npm run ingest` populates the `documents`/`chunks` tables from the
-> VTEX documentation. That scraping/ingestion pipeline is being built in a separate
-> project — see [`src/ingestion/README.md`](./src/ingestion/README.md). Until it's
-> wired in, populate those tables yourself (matching the schema in
-> `src/db/migrations/001_init.sql`) to exercise retrieval and generation locally.
+> **Ingestion**: `npm run ingest` populates the `documents`/`chunks` tables by
+> fetching configured Markdown files from the public
+> [`vtexdocs/dev-portal-content`](https://github.com/vtexdocs/dev-portal-content)
+> GitHub repo — see [`cron/README.md`](./cron/README.md) for the design (a
+> standalone, source-agnostic pipeline behind a `ContentProvider` abstraction)
+> and [`cron/config/sources.json`](./cron/config/sources.json) to change which
+> documents are ingested.
 
 ## Run
 

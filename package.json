@@ -9,10 +9,11 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/api/server.js",
     "db:migrate": "tsx src/db/migrate.ts",
-    "ingest": "tsx src/ingestion/run.ts",
+    "ingest": "tsx cron/run.ts",
     "evaluate": "tsx src/evaluation/runEvaluation.ts",
     "test": "vitest run",
     "test:watch": "vitest",
+    "typecheck:cron": "tsc -p tsconfig.cron.json",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

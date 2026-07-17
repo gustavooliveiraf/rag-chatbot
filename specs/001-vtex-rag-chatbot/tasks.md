@@ -59,10 +59,10 @@ Single backend project (no frontend) per plan.md: `src/`, `tests/`, `evaluation/
 - [X] T011 [P] Implement structured JSON logger in `src/observability/logger.ts` (depends on T002)
 - [X] T012 Implement interaction record persistence (insert into `interactions`, including the `error` column for failed requests) in `src/observability/interactions.ts` (depends on T006, T007, T010)
 - [X] T013 Implement Express app scaffold with `GET /health` in `src/api/server.ts` and `src/api/routes/health.ts` (depends on T008)
-- [ ] T014 [P] Implement VTEX docs fetch + main-content/heading extraction in `src/ingestion/fetch.ts` (depends on T002) — **DEFERRED**: VTEX ingestion is being built in a separate project; see `src/ingestion/README.md`
-- [ ] T015 Implement heading-based chunking with overlap fallback in `src/ingestion/chunk.ts` (depends on T014) — **DEFERRED**, see T014
-- [ ] T016 Implement chunk embedding (`text-embedding-3-small`) + upsert into `chunks`/`documents` in `src/ingestion/embed.ts` (depends on T006, T007, T009, T010, T015) — **DEFERRED**, see T014
-- [ ] T017 Implement ingestion CLI entrypoint (seed VTEX URL list + `npm run ingest` script) in `src/ingestion/run.ts` (depends on T016) — **DEFERRED**, see T014
+- [X] T014 [P] Implement `ContentProvider` abstraction + `GitHubRawProvider` (fetches configured Markdown files from `raw.githubusercontent.com`, no HTML scraping) in `cron/contentProvider.ts` / `cron/providers/githubRawProvider.ts` (depends on T002)
+- [X] T015 Implement heading-based chunking with overlap fallback in `cron/chunk.ts` (depends on T014)
+- [X] T016 Implement chunk embedding (`text-embedding-3-small`) + content-hash-guarded upsert into `chunks`/`documents` in `cron/embed.ts` (depends on T006, T007, T009, T010, T015)
+- [X] T017 Implement ingestion entrypoint (`cron/config/sources.json` source list + `npm run ingest` script) in `cron/run.ts` (depends on T016)
 
 **Checkpoint**: Foundation ready. Run `npm run ingest` to populate the corpus before validating any
 user story below (per quickstart.md).
