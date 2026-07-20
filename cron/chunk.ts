@@ -1,6 +1,6 @@
-const TARGET_TOKENS = 500;
+const TARGET_TOKENS = 300;
 const OVERLAP_CHARS = 200;
-const HARD_WRAP_CHARS = 2000;
+const HARD_WRAP_CHARS = TARGET_TOKENS * 4;
 
 export interface ChunkDraft {
   chunkIndex: number;

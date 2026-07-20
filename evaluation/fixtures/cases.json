@@ -1,15 +1,21 @@
 [
   {
-    "id": "shipping-policy-basic",
-    "question": "How do I configure a shipping policy?",
+    "id": "product-vtex",
+    "question": "What is a Product in VTEX?",
     "expect_answered": true,
-    "expected_source_titles": ["Checkout"]
+    "expected_source_titles": ["Managing products"]
   },
   {
     "id": "sku-ambiguous",
     "question": "What is a SKU?",
     "expect_answered": true,
-    "expected_source_titles": ["Catalog"]
+    "expected_source_titles": ["Managing SKUs"]
+  },
+  {
+    "id": "catalog-api",
+    "question": "What is the Catalog API?",
+    "expect_answered": true,
+    "expected_source_titles": ["Catalog API - Overview"]
   },
   {
     "id": "unrelated-general-trivia",

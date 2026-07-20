@@ -35,6 +35,10 @@ async function runCase(evalCase: EvaluationCase): Promise<CaseResult> {
     };
   }
 
+  console.log(`===> ${evalCase.id}: ${evalCase.question}\n\n`);
+  retrieved.forEach(r => console.log(r.similarity, r.content));
+  console.log("===>\n\n");
+
   const sourceTitles = answer.sources.map((s) => s.title);
   const matched = evalCase.expected_source_titles.some((title) => sourceTitles.includes(title));
   const pass = answer.grounded === true && matched;
