@@ -1,11 +1,18 @@
-import { openai, callOpenAi } from "../config/clients.js";
+import { ChatOpenAI } from "@langchain/openai";
+import { callOpenAi } from "../config/clients.js";
 import { config } from "../config/index.js";
-import { buildMessages } from "./promptBuilder.js";
+import { buildPrompt } from "./promptBuilder.js";
 import { toSourceRefs } from "./sourceMapper.js";
 import type { Answer, RetrievedChunk } from "../types/index.js";
 
 export const DECLINE_MESSAGE =
   "I couldn't find information about this in the VTEX documentation I have access to.";
+
+const chatModel = new ChatOpenAI({
+  apiKey: config.openaiApiKey,
+  model: config.generationModel,
+  maxRetries: 0,
+});
 
 export async function generateAnswer(
   question: string,
@@ -15,15 +22,12 @@ export async function generateAnswer(
     return { text: DECLINE_MESSAGE, grounded: false, sources: [] };
   }
 
-  const messages = buildMessages(question, passages);
-  const completion = await callOpenAi("chat.completions.create", () =>
-    openai.chat.completions.create({
-      model: config.generationModel,
-      messages,
-    }),
+  const prompt = buildPrompt(question, passages);
+  const response = await callOpenAi("chat.completions.create", () =>
+    prompt.pipe(chatModel).invoke({}),
   );
 
-  const text = completion.choices[0]?.message.content?.trim() ?? DECLINE_MESSAGE;
+  const text = (response.content as string)?.trim() || DECLINE_MESSAGE;
 
   return {
     text,

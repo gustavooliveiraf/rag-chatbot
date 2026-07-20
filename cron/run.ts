@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { pool } from "../src/db/pool.js";
+import { closeVectorStore } from "../src/retrieval/vectorStore.js";
 import { GitHubRawProvider, type GitHubSourcesConfig } from "./providers/githubRawProvider.js";
 import { ingestDocument } from "./embed.js";
 
@@ -30,6 +31,7 @@ async function main() {
       }
     }
   } finally {
+    await closeVectorStore();
     await pool.end();
   }
 

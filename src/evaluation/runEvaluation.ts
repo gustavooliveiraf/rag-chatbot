@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { searchChunks } from "../retrieval/search.js";
 import { selectPassages } from "../retrieval/selectPassages.js";
 import { generateAnswer } from "../generation/generateAnswer.js";
+import { closeVectorStore } from "../retrieval/vectorStore.js";
 import type { EvaluationCase } from "../types/index.js";
 
 const fixturesPath = path.join(
@@ -36,7 +37,7 @@ async function runCase(evalCase: EvaluationCase): Promise<CaseResult> {
   }
 
   console.log(`===> ${evalCase.id}: ${evalCase.question}\n\n`);
-  retrieved.forEach(r => console.log(r.similarity, r.content));
+  passages.forEach(r => console.log(r.similarity, r.content));
   console.log("===>\n\n");
 
   const sourceTitles = answer.sources.map((s) => s.title);
@@ -93,7 +94,9 @@ async function main() {
   );
 }
 
-main().catch((err) => {
-  console.error("Evaluation run failed:", err);
-  process.exitCode = 1;
-});
+main()
+  .catch((err) => {
+    console.error("Evaluation run failed:", err);
+    process.exitCode = 1;
+  })
+  .finally(() => closeVectorStore());

@@ -1,6 +1,12 @@
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+
 const TARGET_TOKENS = 300;
-const OVERLAP_CHARS = 200;
-const HARD_WRAP_CHARS = TARGET_TOKENS * 4;
+const OVERLAP_TOKENS = 50;
+
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: TARGET_TOKENS * 4,
+  chunkOverlap: OVERLAP_TOKENS * 4,
+});
 
 export interface ChunkDraft {
   chunkIndex: number;
@@ -115,53 +121,14 @@ function splitSections(body: string, title: string): Section[] {
   return sections;
 }
 
-function hardWrap(text: string): string[] {
-  const pieces: string[] = [];
-  let start = 0;
-  while (start < text.length) {
-    const end = Math.min(start + HARD_WRAP_CHARS, text.length);
-    pieces.push(text.slice(start, end));
-    start = end;
-  }
-  return pieces;
-}
-
-function windowSection(body: string): string[] {
+function windowSection(body: string): Promise<string[]> {
   if (estimateTokens(body) <= TARGET_TOKENS) {
-    return [body];
+    return Promise.resolve([body]);
   }
-
-  const paragraphs = body
-    .split(/\n{2,}/)
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0);
-
-  const windows: string[] = [];
-  let current = "";
-
-  const pushCurrent = () => {
-    if (current.trim().length > 0) windows.push(current.trim());
-  };
-
-  for (const paragraph of paragraphs) {
-    const pieces = estimateTokens(paragraph) > TARGET_TOKENS ? hardWrap(paragraph) : [paragraph];
-    for (const piece of pieces) {
-      const candidate = current ? `${current}\n\n${piece}` : piece;
-      if (current && estimateTokens(candidate) > TARGET_TOKENS) {
-        pushCurrent();
-        const overlap = current.slice(-OVERLAP_CHARS);
-        current = overlap ? `${overlap}\n\n${piece}` : piece;
-      } else {
-        current = candidate;
-      }
-    }
-  }
-  pushCurrent();
-
-  return windows.length > 0 ? windows : [body];
+  return splitter.splitText(body);
 }
 
-export function parseMarkdown(raw: string, path: string): ParsedDocument {
+export async function parseMarkdown(raw: string, path: string): Promise<ParsedDocument> {
   const { frontmatter, body: afterFrontmatter } = stripFrontmatter(raw);
   const { title, body } = deriveTitle(frontmatter, afterFrontmatter, path);
   const sections = splitSections(body, title);
@@ -169,7 +136,7 @@ export function parseMarkdown(raw: string, path: string): ParsedDocument {
   const chunks: ChunkDraft[] = [];
   let chunkIndex = 0;
   for (const section of sections) {
-    for (const windowText of windowSection(section.body)) {
+    for (const windowText of await windowSection(section.body)) {
       chunks.push({
         chunkIndex: chunkIndex++,
         headingPath: section.headingPath,

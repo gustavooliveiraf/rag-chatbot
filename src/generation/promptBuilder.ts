@@ -1,3 +1,4 @@
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 import type { RetrievedChunk } from "../types/index.js";
 
 export const SYSTEM_PROMPT = `You are a documentation assistant for the VTEX platform.
@@ -13,18 +14,10 @@ function formatPassage(chunk: RetrievedChunk, index: number): string {
   return `[Source ${index + 1}: ${chunk.documentTitle} > ${chunk.headingPath}]\n${chunk.content}`;
 }
 
-export interface PromptMessage {
-  role: "system" | "user";
-  content: string;
-}
-
-export function buildMessages(question: string, passages: RetrievedChunk[]): PromptMessage[] {
+export function buildPrompt(question: string, passages: RetrievedChunk[]): ChatPromptTemplate {
   const passagesBlock = passages.map(formatPassage).join("\n\n");
-  return [
-    { role: "system", content: SYSTEM_PROMPT },
-    {
-      role: "user",
-      content: `Question: ${question}\n\nPassages:\n${passagesBlock}`,
-    },
-  ];
+  return ChatPromptTemplate.fromMessages([
+    ["system", SYSTEM_PROMPT],
+    ["human", `Question: ${question}\n\nPassages:\n${passagesBlock}`],
+  ]);
 }

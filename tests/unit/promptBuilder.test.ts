@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildMessages, SYSTEM_PROMPT } from "../../src/generation/promptBuilder.js";
+import { buildPrompt, SYSTEM_PROMPT } from "../../src/generation/promptBuilder.js";
 import type { RetrievedChunk } from "../../src/types/index.js";
 
 function chunk(overrides: Partial<RetrievedChunk> = {}): RetrievedChunk {
@@ -18,7 +18,7 @@ function chunk(overrides: Partial<RetrievedChunk> = {}): RetrievedChunk {
   };
 }
 
-describe("buildMessages / SYSTEM_PROMPT", () => {
+describe("buildPrompt / SYSTEM_PROMPT", () => {
   it("instructs the model to ground answers and decline when unsupported", () => {
     expect(SYSTEM_PROMPT).toMatch(/answer only using the passages/i);
     expect(SYSTEM_PROMPT).toMatch(/does not contain the answer/i);
@@ -29,10 +29,12 @@ describe("buildMessages / SYSTEM_PROMPT", () => {
     expect(SYSTEM_PROMPT).toMatch(/top 3/i);
   });
 
-  it("labels each passage with its source and includes the question", () => {
-    const messages = buildMessages("How do I configure a shipping policy?", [chunk()]);
-    expect(messages[0]?.role).toBe("system");
-    expect(messages[1]?.role).toBe("user");
+  it("labels each passage with its source and includes the question", async () => {
+    const prompt = buildPrompt("How do I configure a shipping policy?", [chunk()]);
+    const messages = await prompt.formatMessages({});
+
+    expect(messages[0]?.getType()).toBe("system");
+    expect(messages[1]?.getType()).toBe("human");
     expect(messages[1]?.content).toContain("How do I configure a shipping policy?");
     expect(messages[1]?.content).toContain("Checkout > Shipping Policies");
   });

@@ -1,21 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 
-const { searchChunksMock, recordInteractionMock, chatCompletionsCreateMock } = vi.hoisted(() => ({
+const { searchChunksMock, recordInteractionMock, buildPromptMock, invokeMock } = vi.hoisted(() => ({
   searchChunksMock: vi.fn(),
   recordInteractionMock: vi.fn(),
-  chatCompletionsCreateMock: vi.fn(),
+  buildPromptMock: vi.fn(),
+  invokeMock: vi.fn(),
 }));
 
 vi.mock("../../src/retrieval/search.js", () => ({ searchChunks: searchChunksMock }));
 vi.mock("../../src/observability/interactions.js", () => ({
   recordInteraction: recordInteractionMock,
 }));
-vi.mock("../../src/config/clients.js", () => ({
-  openai: { chat: { completions: { create: chatCompletionsCreateMock } } },
-  callOpenAi: async (_op: string, fn: () => Promise<unknown>) => fn(),
-  ExternalApiError: class ExternalApiError extends Error {},
+vi.mock("../../src/generation/promptBuilder.js", () => ({
+  buildPrompt: buildPromptMock,
 }));
+vi.mock("@langchain/openai", () => ({
+  ChatOpenAI: vi.fn(),
+}));
+
+buildPromptMock.mockReturnValue({ pipe: () => ({ invoke: invokeMock }) });
 
 const { app } = await import("../../src/api/server.js");
 
@@ -23,7 +27,8 @@ describe("POST /chat - source traceability (User Story 3)", () => {
   beforeEach(() => {
     searchChunksMock.mockReset();
     recordInteractionMock.mockReset();
-    chatCompletionsCreateMock.mockReset();
+    invokeMock.mockReset();
+    buildPromptMock.mockClear();
   });
 
   it("includes accurate, non-empty sources matching the retrieved passage", async () => {
@@ -41,8 +46,8 @@ describe("POST /chat - source traceability (User Story 3)", () => {
         similarity: 0.88,
       },
     ]);
-    chatCompletionsCreateMock.mockResolvedValue({
-      choices: [{ message: { content: "Order status transitions work as follows [Source 1]." } }],
+    invokeMock.mockResolvedValue({
+      content: "Order status transitions work as follows [Source 1].",
     });
 
     const res = await request(app)

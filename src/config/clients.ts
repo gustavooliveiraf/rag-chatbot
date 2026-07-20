@@ -1,8 +1,3 @@
-import OpenAI from "openai";
-import { config } from "./index.js";
-
-export const openai = new OpenAI({ apiKey: config.openaiApiKey });
-
 /**
  * Marks a failure as coming from an upstream OpenAI call (embedding or generation)
  * so callers can distinguish it from application errors and satisfy FR-012 (explicit

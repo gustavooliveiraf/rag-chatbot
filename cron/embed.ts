@@ -1,13 +1,10 @@
 import { createHash } from "node:crypto";
+import { Document } from "@langchain/core/documents";
 import { pool } from "../src/db/pool.js";
-import { openai, callOpenAi } from "../src/config/clients.js";
-import { config } from "../src/config/index.js";
+import { callOpenAi } from "../src/config/clients.js";
+import { getVectorStore } from "../src/retrieval/vectorStore.js";
 import { parseMarkdown } from "./chunk.js";
 import type { DocumentReference } from "./contentProvider.js";
-
-function toVectorLiteral(embedding: number[]): string {
-  return `[${embedding.join(",")}]`;
-}
 
 function hashContent(raw: string): string {
   return createHash("sha256").update(raw).digest("hex");
@@ -18,7 +15,7 @@ export async function ingestDocument(
   rawContent: string,
 ): Promise<"created" | "updated" | "unchanged"> {
   const contentHash = hashContent(rawContent);
-  const parsed = parseMarkdown(rawContent, doc.path);
+  const parsed = await parseMarkdown(rawContent, doc.path);
 
   const upsertResult = await pool.query<{ id: string; previous_hash: string | null }>(
     `WITH existing AS (
@@ -46,43 +43,28 @@ export async function ingestDocument(
   }
 
   const documentId = row.id;
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    await client.query("DELETE FROM chunks WHERE document_id = $1", [documentId]);
+  const vectorStore = await getVectorStore();
 
-    for (const chunk of parsed.chunks) {
-      const embeddingResponse = await callOpenAi("embeddings.create", () =>
-        openai.embeddings.create({ model: config.embeddingModel, input: chunk.content }),
-      );
-      const embedding = embeddingResponse.data[0]?.embedding;
-      if (!embedding) {
-        throw new Error(
-          `OpenAI embeddings response contained no data for ${doc.path}#${chunk.chunkIndex}`,
-        );
-      }
+  await callOpenAi("vectorStore.addDocuments", async () => {
+    await pool.query(`DELETE FROM chunks WHERE metadata ->> 'documentId' = $1`, [documentId]);
 
-      await client.query(
-        `INSERT INTO chunks (document_id, chunk_index, heading_path, content, token_count, embedding)
-         VALUES ($1, $2, $3, $4, $5, $6::vector)`,
-        [
-          documentId,
-          chunk.chunkIndex,
-          chunk.headingPath,
-          chunk.content,
-          chunk.tokenCount,
-          toVectorLiteral(embedding),
-        ],
-      );
-    }
+    const docs = parsed.chunks.map(
+      (chunk) =>
+        new Document({
+          pageContent: chunk.content,
+          metadata: {
+            documentId,
+            chunkIndex: chunk.chunkIndex,
+            headingPath: chunk.headingPath,
+            tokenCount: chunk.tokenCount,
+            documentTitle: parsed.title,
+            sourceUrl: doc.url,
+          },
+        }),
+    );
 
-    await client.query("COMMIT");
-  } catch (err) {
-    await client.query("ROLLBACK");
-    throw err;
-  } finally {
-    client.release();
-  }
+    await vectorStore.addDocuments(docs);
+  });
 
   return isNew ? "created" : "updated";
 }

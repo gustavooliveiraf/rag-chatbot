@@ -1,21 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 
-const { searchChunksMock, recordInteractionMock, chatCompletionsCreateMock } = vi.hoisted(() => ({
+const { searchChunksMock, recordInteractionMock, buildPromptMock, invokeMock } = vi.hoisted(() => ({
   searchChunksMock: vi.fn(),
   recordInteractionMock: vi.fn(),
-  chatCompletionsCreateMock: vi.fn(),
+  buildPromptMock: vi.fn(),
+  invokeMock: vi.fn(),
 }));
 
 vi.mock("../../src/retrieval/search.js", () => ({ searchChunks: searchChunksMock }));
 vi.mock("../../src/observability/interactions.js", () => ({
   recordInteraction: recordInteractionMock,
 }));
-vi.mock("../../src/config/clients.js", () => ({
-  openai: { chat: { completions: { create: chatCompletionsCreateMock } } },
-  callOpenAi: async (_op: string, fn: () => Promise<unknown>) => fn(),
-  ExternalApiError: class ExternalApiError extends Error {},
+vi.mock("../../src/generation/promptBuilder.js", () => ({
+  buildPrompt: buildPromptMock,
 }));
+vi.mock("@langchain/openai", () => ({
+  ChatOpenAI: vi.fn(),
+}));
+
+buildPromptMock.mockReturnValue({ pipe: () => ({ invoke: invokeMock }) });
 
 const { app } = await import("../../src/api/server.js");
 
@@ -23,7 +27,8 @@ describe("POST /chat - golden path (User Story 1)", () => {
   beforeEach(() => {
     searchChunksMock.mockReset();
     recordInteractionMock.mockReset();
-    chatCompletionsCreateMock.mockReset();
+    invokeMock.mockReset();
+    buildPromptMock.mockClear();
   });
 
   it("returns a grounded answer with non-empty sources for a documented question", async () => {
@@ -41,8 +46,8 @@ describe("POST /chat - golden path (User Story 1)", () => {
         similarity: 0.92,
       },
     ]);
-    chatCompletionsCreateMock.mockResolvedValue({
-      choices: [{ message: { content: "Configure it in the Checkout admin panel [Source 1]." } }],
+    invokeMock.mockResolvedValue({
+      content: "Configure it in the Checkout admin panel [Source 1].",
     });
 
     const start = Date.now();

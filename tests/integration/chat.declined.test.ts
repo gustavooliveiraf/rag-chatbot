@@ -1,21 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 
-const { searchChunksMock, recordInteractionMock, chatCompletionsCreateMock } = vi.hoisted(() => ({
+const { searchChunksMock, recordInteractionMock, buildPromptMock, invokeMock } = vi.hoisted(() => ({
   searchChunksMock: vi.fn(),
   recordInteractionMock: vi.fn(),
-  chatCompletionsCreateMock: vi.fn(),
+  buildPromptMock: vi.fn(),
+  invokeMock: vi.fn(),
 }));
 
 vi.mock("../../src/retrieval/search.js", () => ({ searchChunks: searchChunksMock }));
 vi.mock("../../src/observability/interactions.js", () => ({
   recordInteraction: recordInteractionMock,
 }));
-vi.mock("../../src/config/clients.js", () => ({
-  openai: { chat: { completions: { create: chatCompletionsCreateMock } } },
-  callOpenAi: async (_op: string, fn: () => Promise<unknown>) => fn(),
-  ExternalApiError: class ExternalApiError extends Error {},
+vi.mock("../../src/generation/promptBuilder.js", () => ({
+  buildPrompt: buildPromptMock,
 }));
+vi.mock("@langchain/openai", () => ({
+  ChatOpenAI: vi.fn(),
+}));
+
+buildPromptMock.mockReturnValue({ pipe: () => ({ invoke: invokeMock }) });
 
 const { app } = await import("../../src/api/server.js");
 
@@ -23,7 +27,8 @@ describe("POST /chat - decline path (User Story 2)", () => {
   beforeEach(() => {
     searchChunksMock.mockReset();
     recordInteractionMock.mockReset();
-    chatCompletionsCreateMock.mockReset();
+    invokeMock.mockReset();
+    buildPromptMock.mockClear();
   });
 
   it("returns grounded:false and empty sources when no chunk clears the similarity threshold", async () => {
@@ -50,7 +55,7 @@ describe("POST /chat - decline path (User Story 2)", () => {
     expect(res.body.grounded).toBe(false);
     expect(res.body.sources).toEqual([]);
     expect(res.body.answer).toBeTruthy();
-    expect(chatCompletionsCreateMock).not.toHaveBeenCalled();
+    expect(invokeMock).not.toHaveBeenCalled();
     expect(recordInteractionMock).toHaveBeenCalledWith(
       expect.objectContaining({ grounded: false }),
     );
